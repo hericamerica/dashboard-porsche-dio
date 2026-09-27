@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Porsche Executive Dashboard</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        porsche: {
+                            red: '#D50000',
+                            dark: '#0A0A0A',
+                            panel: '#151515',
+                            border: '#2A2A2A',
+                            text: '#E5E5E5',
+                            muted: '#888888'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            background-color: #0A0A0A;
+            color: #E5E5E5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0A0A0A; }
+        ::-webkit-scrollbar-thumb { background: #2A2A2A; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #D50000; }
+
+        .glass-panel {
+            background: rgba(21, 21, 21, 0.95);
+            border: 1px solid #2A2A2A;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .select-styled {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23888888'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1.2em;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans">
+
+    <header class="border-b border-porsche-border bg-porsche-dark sticky top-0 z-50">
+        <div class="max-w-[1440px] mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <h1 class="text-2xl font-bold tracking-[0.2em] uppercase text-white">
+                    Porsche <span class="text-porsche-red font-light">Executive</span>
+                </h1>
+            </div>
+            <div class="text-sm text-porsche-muted tracking-wider uppercase">
+                Sales Performance
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-[1440px] mx-auto px-6 py-8 w-full flex flex-col lg:flex-row gap-8">
+        
+        <!-- Sidebar / Filtros -->
+        <aside class="w-full lg:w-80 flex-shrink-0 flex flex-col gap-6">
+            <div class="glass-panel p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-sm font-semibold uppercase tracking-widest text-white border-l-2 border-porsche-red pl-3">
+                        Filtros de Análise
+                    </h2>
+                    <button id="reset-filters" class="text-xs text-porsche-muted hover:text-porsche-red transition-colors">Limpar</button>
+                </div>
+
+                <div class="space-y-5">
+                    <!-- Filtro: Estado -->
+                    <div>
+                        <label class="block text-xs uppercase tracking-wider text-porsche-muted mb-2">State</label>
+                        <select id="filter-state" class="select-styled w-full bg-porsche-dark border border-porsche-border text-sm text-white rounded px-4 py-2.5 focus:outline-none focus:border-porsche-red transition-colors cursor-pointer">
+                            <option value="all">Todos os Estados</option>
+                        </select>
+                    </div>
+
+                    <!-- Filtro: Modelo -->
+                    <div>
+                        <label class="block text-xs uppercase tracking-wider text-porsche-muted mb-2">Porsche Model</label>
+                        <select id="filter-model" class="select-styled w-full bg-porsche-dark border border-porsche-border text-sm text-white rounded px-4 py-2.5 focus:outline-none focus:border-porsche-red transition-colors cursor-pointer">
+                            <option value="all">Todos os Modelos</option>
+                        </select>
+                    </div>
+
+                    <!-- Filtro: Método de Pagamento -->
+                    <div>
+                        <label class="block text-xs uppercase tracking-wider text-porsche-muted mb-2">Payment Method</label>
+                        <select id="filter-payment" class="select-styled w-full bg-porsche-dark border border-porsche-border text-sm text-white rounded px-4 py-2.5 focus:outline-none focus:border-porsche-red transition-colors cursor-pointer">
+                            <option value="all">Todos os Métodos</option>
+                        </select>
+                    </div>
+
+                    <!-- Filtro: Tipo de Motor (Engine Type) -->
+                    <div>
+                        <label class="block text-xs uppercase tracking-wider text-porsche-muted mb-2">Engine Type</label>
+                        <select id="filter-engine" class="select-styled w-full bg-porsche-dark border border-porsche-border text-sm text-white rounded px-4 py-2.5 focus:outline-none focus:border-porsche-red transition-colors cursor-pointer">
+                            <option value="all">Todos</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="glass-panel p-6 flex flex-col gap-4">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-sm font-semibold uppercase tracking-widest text-white border-l-2 border-porsche-red pl-3 flex items-center gap-2">
+                        AI Analyst
+                    </h2>
+                </div>
+                <p class="text-xs text-porsche-muted leading-relaxed">
+                    Obtenha um resumo executivo gerado por Inteligência Artificial com base nos filtros atuais.
+                </p>
+                <button id="btn-generate-insight" class="w-full bg-porsche-dark border border-porsche-border hover:border-porsche-red text-white text-sm font-medium py-2.5 rounded transition-all duration-300">
+                    Gerar Insight Financeiro
+                </button>
+                <div id="ai-loading" class="hidden text-xs text-porsche-red flex items-center gap-2 justify-center py-2">
+                    <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    Analisando cenário...
+                </div>
+                <div id="ai-insight-text" class="hidden text-sm font-light text-porsche-text leading-relaxed bg-[#111] p-4 rounded border border-[#222]">
+                </div>
+            </div>
+        </aside>
+
+        <div class="flex-grow flex flex-col gap-8">
+            
+            <!-- KPIs -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- KPI: Faturamento Total -->
+                <div class="glass-panel p-5 flex flex-col justify-between relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-12 h-12 bg-porsche-red opacity-10 rounded-bl-full transition-transform group-hover:scale-125"></div>
+                    <span class="text-xs uppercase tracking-wider text-porsche-muted mb-1">Faturamento Total</span>
+                    <div id="kpi-revenue" class="text-2xl font-light text-white">$0.00</div>
+                </div>
+
+                <!-- KPI: Ticket Médio -->
+                <div class="glass-panel p-5 flex flex-col justify-between relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-12 h-12 bg-porsche-red opacity-10 rounded-bl-full transition-transform group-hover:scale-125"></div>
+                    <span class="text-xs uppercase tracking-wider text-porsche-muted mb-1">Ticket Médio</span>
+                    <div id="kpi-ticket" class="text-2xl font-light text-white">$0.00</div>
+                </div>
+
+                <!-- KPI: Unidades Vendidas -->
+                <div class="glass-panel p-5 flex flex-col justify-between">
+                    <span class="text-xs uppercase tracking-wider text-porsche-muted mb-1">Unidades Vendidas</span>
+                    <div id="kpi-units" class="text-2xl font-light text-white">0</div>
+                </div>
+
+                <!-- KPI: Mix Elétrico -->
+                <div class="glass-panel p-5 flex flex-col justify-between border-b-2 border-b-porsche-red">
+                    <span class="text-xs uppercase tracking-wider text-porsche-muted mb-1">Mix Elétrico (EV)</span>
+                    <div id="kpi-ev-mix" class="text-2xl font-light text-white">0%</div>
+                </div>
+            </div>
+
+            <!-- Gráficos Grid 2x2 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-grow">
+                
+                <!-- Gráfico 1: Evolução de Vendas ao Longo do Tempo -->
+                <div class="glass-panel p-6 flex flex-col min-h-[320px]">
+                    <h3 class="text-sm font-semibold uppercase tracking-widest text-white mb-4">Evolução de Faturamento</h3>
+                    <div class="flex-grow relative w-full h-full">
+                        <canvas id="evolutionChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Gráfico 2: Top Modelos por Faturação -->
+                <div class="glass-panel p-6 flex flex-col min-h-[320px]">
+                    <h3 class="text-sm font-semibold uppercase tracking-widest text-white mb-4">Top Modelos (Faturamento)</h3>
+                    <div class="flex-grow relative w-full h-full">
+                        <canvas id="topModelsChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Gráfico 3: Vendas por Estado -->
+                <div class="glass-panel p-6 flex flex-col min-h-[320px]">
+                    <h3 class="text-sm font-semibold uppercase tracking-widest text-white mb-4">Faturamento por Estado</h3>
+                    <div class="flex-grow relative w-full h-full">
+                        <canvas id="stateChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Gráfico 4: Transição Energética -->
+                <div class="glass-panel p-6 flex flex-col min-h-[320px]">
+                    <h3 class="text-sm font-semibold uppercase tracking-widest text-white mb-4">Transição Energética (Unidades)</h3>
+                    <div class="flex-grow relative w-full h-full">
+                        <canvas id="engineChart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Embedded Data
+        const porscheData = [{"PorscheModelSanitized":"911 Turbo S","ModelYearSanitized":2024,"StateSanitized":"WA","PayMethodSanitized":"Wire Transfer","SalesPriceSanitized":235000.0,"SaleDateSanitized":"2024-03","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Cayenne Coupe","ModelYearSanitized":2023,"StateSanitized":"TX","PayMethodSanitized":"Financing","SalesPriceSanitized":112750.0,"SaleDateSanitized":"2024-04","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Taycan 4S","ModelYearSanitized":2024,"StateSanitized":"CA","PayMethodSanitized":"Bank Transfer","SalesPriceSanitized":121000.0,"SaleDateSanitized":"2024-05","EngineType":"Elétrico"},{"PorscheModelSanitized":"Panamera 4","ModelYearSanitized":2023,"StateSanitized":"FL","PayMethodSanitized":"Credit Card","SalesPriceSanitized":104500.0,"SaleDateSanitized":"2024-08","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"911 Carrera S","ModelYearSanitized":2020,"StateSanitized":"NY","PayMethodSanitized":"Lease","SalesPriceSanitized":96300.0,"SaleDateSanitized":"2024-07","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"718 Boxster","ModelYearSanitized":2021,"StateSanitized":"IL","PayMethodSanitized":"Debit Card","SalesPriceSanitized":73500.0,"SaleDateSanitized":"2024-08","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Macan GTS","ModelYearSanitized":2024,"StateSanitized":"AZ","PayMethodSanitized":"Financing","SalesPriceSanitized":95000.0,"SaleDateSanitized":"2024-09","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Taycan Turbo","ModelYearSanitized":2023,"StateSanitized":"TX","PayMethodSanitized":"ACH Payment","SalesPriceSanitized":153200.5,"SaleDateSanitized":"2024-09","EngineType":"Elétrico"},{"PorscheModelSanitized":"Panamera Turbo S","ModelYearSanitized":2022,"StateSanitized":"CA","PayMethodSanitized":"Cash","SalesPriceSanitized":132000.0,"SaleDateSanitized":"2024-05","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Cayenne Turbo GT","ModelYearSanitized":2024,"StateSanitized":"TX","PayMethodSanitized":"Crypto Payment","SalesPriceSanitized":188000.0,"SaleDateSanitized":"2024-12","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"911 Carrera Cabriolet","ModelYearSanitized":2023,"StateSanitized":"GA","PayMethodSanitized":"Credit Card","SalesPriceSanitized":127800.0,"SaleDateSanitized":"2024-12","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Macan","ModelYearSanitized":2021,"StateSanitized":"FL","PayMethodSanitized":"Bank Transfer","SalesPriceSanitized":58900.0,"SaleDateSanitized":"2025-01","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Taycan Cross Turismo","ModelYearSanitized":2023,"StateSanitized":"NC","PayMethodSanitized":"Wire Transfer","SalesPriceSanitized":118500.0,"SaleDateSanitized":"2025-02","EngineType":"Elétrico"},{"PorscheModelSanitized":"911 Targa 4S","ModelYearSanitized":2024,"StateSanitized":"MN","PayMethodSanitized":"Lease","SalesPriceSanitized":158750.0,"SaleDateSanitized":"2025-03","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Panamera","ModelYearSanitized":2020,"StateSanitized":"PA","PayMethodSanitized":"Bank Transfer","SalesPriceSanitized":72000.0,"SaleDateSanitized":"2025-03","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Macan Electric","ModelYearSanitized":2025,"StateSanitized":"TX","PayMethodSanitized":"Wire Transfer","SalesPriceSanitized":86500.0,"SaleDateSanitized":"2025-04","EngineType":"Elétrico"},{"PorscheModelSanitized":"Taycan GTS","ModelYearSanitized":2023,"StateSanitized":"NC","PayMethodSanitized":"Financing","SalesPriceSanitized":139000.0,"SaleDateSanitized":"2025-05","EngineType":"Elétrico"},{"PorscheModelSanitized":"Cayenne","ModelYearSanitized":2021,"StateSanitized":"MI","PayMethodSanitized":"Credit Card","SalesPriceSanitized":76800.0,"SaleDateSanitized":"2025-06","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"911 Carrera GTS","ModelYearSanitized":2022,"StateSanitized":"IN","PayMethodSanitized":"Cash","SalesPriceSanitized":119900.0,"SaleDateSanitized":"2025-07","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Panamera 4 E-Hybrid","ModelYearSanitized":2023,"StateSanitized":"TX","PayMethodSanitized":"Lease","SalesPriceSanitized":109250.0,"SaleDateSanitized":"2025-07","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Macan T","ModelYearSanitized":2022,"StateSanitized":"FL","PayMethodSanitized":"Wire Transfer","SalesPriceSanitized":82000.0,"SaleDateSanitized":"2025-08","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Taycan Turbo S","ModelYearSanitized":2025,"StateSanitized":"CA","PayMethodSanitized":"Crypto Payment","SalesPriceSanitized":214000.0,"SaleDateSanitized":"2025-09","EngineType":"Elétrico"},{"PorscheModelSanitized":"Cayenne S","ModelYearSanitized":2023,"StateSanitized":"CA","PayMethodSanitized":"Bank Transfer","SalesPriceSanitized":98200.0,"SaleDateSanitized":"2025-09","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Macan","ModelYearSanitized":2022,"StateSanitized":"OH","PayMethodSanitized":"Financing","SalesPriceSanitized":67500.0,"SaleDateSanitized":"2025-10","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Taycan","ModelYearSanitized":2025,"StateSanitized":"WI","PayMethodSanitized":"Wire Transfer","SalesPriceSanitized":116900.0,"SaleDateSanitized":"2025-10","EngineType":"Elétrico"},{"PorscheModelSanitized":"Panamera 4S","ModelYearSanitized":2024,"StateSanitized":"MO","PayMethodSanitized":"Cash","SalesPriceSanitized":112000.0,"SaleDateSanitized":"2025-10","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"718 Boxster","ModelYearSanitized":2021,"StateSanitized":"NE","PayMethodSanitized":"Debit Card","SalesPriceSanitized":74000.0,"SaleDateSanitized":"2025-02","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"911 Turbo","ModelYearSanitized":2024,"StateSanitized":"NM","PayMethodSanitized":"Wire Transfer","SalesPriceSanitized":198300.0,"SaleDateSanitized":"2025-11","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Taycan 4S","ModelYearSanitized":2025,"StateSanitized":"VA","PayMethodSanitized":"ACH Payment","SalesPriceSanitized":129000.0,"SaleDateSanitized":"2025-12","EngineType":"Elétrico"},{"PorscheModelSanitized":"Panamera Turbo","ModelYearSanitized":2022,"StateSanitized":"CO","PayMethodSanitized":"Credit Card","SalesPriceSanitized":136000.0,"SaleDateSanitized":"2025-12","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Cayenne E-Hybrid","ModelYearSanitized":2023,"StateSanitized":"CA","PayMethodSanitized":"Lease","SalesPriceSanitized":92800.0,"SaleDateSanitized":"2026-01","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Macan T","ModelYearSanitized":2022,"StateSanitized":"AZ","PayMethodSanitized":"Cash","SalesPriceSanitized":72400.0,"SaleDateSanitized":"2026-01","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Taycan Turbo","ModelYearSanitized":2025,"StateSanitized":"GA","PayMethodSanitized":"Crypto Payment","SalesPriceSanitized":158500.0,"SaleDateSanitized":"2026-01","EngineType":"Elétrico"},{"PorscheModelSanitized":"718 Cayman","ModelYearSanitized":2021,"StateSanitized":"CA","PayMethodSanitized":"Bank Transfer","SalesPriceSanitized":69900.0,"SaleDateSanitized":"2026-02","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Panamera","ModelYearSanitized":2020,"StateSanitized":"OK","PayMethodSanitized":"Wire Transfer","SalesPriceSanitized":71500.0,"SaleDateSanitized":"2026-02","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Cayenne Turbo","ModelYearSanitized":2023,"StateSanitized":"KS","PayMethodSanitized":"Credit Card","SalesPriceSanitized":146800.0,"SaleDateSanitized":"2026-02","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Macan Electric","ModelYearSanitized":2025,"StateSanitized":"LA","PayMethodSanitized":"Lease","SalesPriceSanitized":89700.0,"SaleDateSanitized":"2026-03","EngineType":"Elétrico"},{"PorscheModelSanitized":"911 Carrera S","ModelYearSanitized":2022,"StateSanitized":"HI","PayMethodSanitized":"Bank Transfer","SalesPriceSanitized":104600.0,"SaleDateSanitized":"2026-03","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Cayenne","ModelYearSanitized":2021,"StateSanitized":"NV","PayMethodSanitized":"Cash","SalesPriceSanitized":78400.0,"SaleDateSanitized":"2026-04","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"911 Dakar","ModelYearSanitized":2024,"StateSanitized":"CA","PayMethodSanitized":"Credit Card","SalesPriceSanitized":268900.0,"SaleDateSanitized":"2026-04","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Panamera 4","ModelYearSanitized":2023,"StateSanitized":"TX","PayMethodSanitized":"Wire Transfer","SalesPriceSanitized":101300.0,"SaleDateSanitized":"2026-04","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Macan S","ModelYearSanitized":2021,"StateSanitized":"MO","PayMethodSanitized":"Cash","SalesPriceSanitized":66750.0,"SaleDateSanitized":"2026-05","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Taycan Cross Turismo","ModelYearSanitized":2024,"StateSanitized":"PA","PayMethodSanitized":"Lease","SalesPriceSanitized":127900.0,"SaleDateSanitized":"2026-05","EngineType":"Elétrico"},{"PorscheModelSanitized":"Cayenne Turbo GT","ModelYearSanitized":2025,"StateSanitized":"OH","PayMethodSanitized":"Wire Transfer","SalesPriceSanitized":200000.0,"SaleDateSanitized":"2026-05","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"911 Carrera Cabriolet","ModelYearSanitized":2023,"StateSanitized":"AK","PayMethodSanitized":"Crypto Payment","SalesPriceSanitized":132000.0,"SaleDateSanitized":"2026-06","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"718 Cayman GT4 RS","ModelYearSanitized":2024,"StateSanitized":"TX","PayMethodSanitized":"Credit Card","SalesPriceSanitized":176400.0,"SaleDateSanitized":"2026-06","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Macan","ModelYearSanitized":2021,"StateSanitized":"NC","PayMethodSanitized":"Financing","SalesPriceSanitized":59000.0,"SaleDateSanitized":"2026-07","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Taycan Turbo S","ModelYearSanitized":2025,"StateSanitized":"NE","PayMethodSanitized":"Wire Transfer","SalesPriceSanitized":218000.0,"SaleDateSanitized":"2026-07","EngineType":"Elétrico"},{"PorscheModelSanitized":"911 Carrera GTS","ModelYearSanitized":2024,"StateSanitized":"AZ","PayMethodSanitized":"Credit Card","SalesPriceSanitized":121750.0,"SaleDateSanitized":"2026-04","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"718 Boxster GTS","ModelYearSanitized":2023,"StateSanitized":"NV","PayMethodSanitized":"Lease","SalesPriceSanitized":91500.0,"SaleDateSanitized":"2026-08","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Panamera Turbo S","ModelYearSanitized":2022,"StateSanitized":"NY","PayMethodSanitized":"Wire Transfer","SalesPriceSanitized":134000.0,"SaleDateSanitized":"2026-08","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Macan GTS","ModelYearSanitized":2024,"StateSanitized":"NC","PayMethodSanitized":"ACH Payment","SalesPriceSanitized":96800.0,"SaleDateSanitized":"2026-09","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Taycan 4S","ModelYearSanitized":2025,"StateSanitized":"TX","PayMethodSanitized":"Wire Transfer","SalesPriceSanitized":131600.0,"SaleDateSanitized":"2026-09","EngineType":"Elétrico"},{"PorscheModelSanitized":"Cayenne E-Hybrid","ModelYearSanitized":2023,"StateSanitized":"WI","PayMethodSanitized":"Cash","SalesPriceSanitized":94300.0,"SaleDateSanitized":"2026-09","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"911 Turbo S","ModelYearSanitized":2025,"StateSanitized":"TX","PayMethodSanitized":"Crypto Payment","SalesPriceSanitized":242000.0,"SaleDateSanitized":"2026-10","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"718 Cayman S","ModelYearSanitized":2022,"StateSanitized":"OH","PayMethodSanitized":"Credit Card","SalesPriceSanitized":82750.0,"SaleDateSanitized":"2026-10","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Macan Electric","ModelYearSanitized":2026,"StateSanitized":"CA","PayMethodSanitized":"Wire Transfer","SalesPriceSanitized":91300.0,"SaleDateSanitized":"2026-10","EngineType":"Elétrico"},{"PorscheModelSanitized":"Panamera","ModelYearSanitized":2021,"StateSanitized":"TX","PayMethodSanitized":"Financing","SalesPriceSanitized":79900.0,"SaleDateSanitized":"2026-11","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"911 Targa 4S","ModelYearSanitized":2023,"StateSanitized":"VA","PayMethodSanitized":"Cash","SalesPriceSanitized":156500.0,"SaleDateSanitized":"2026-12","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Taycan","ModelYearSanitized":2025,"StateSanitized":"AZ","PayMethodSanitized":"Lease","SalesPriceSanitized":119900.0,"SaleDateSanitized":"2026-12","EngineType":"Elétrico"},{"PorscheModelSanitized":"911 GT3","ModelYearSanitized":2024,"StateSanitized":"ID","PayMethodSanitized":"Wire Transfer","SalesPriceSanitized":224000.0,"SaleDateSanitized":"2026-12","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"911 Carrera","ModelYearSanitized":2024,"StateSanitized":"FL","PayMethodSanitized":"Credit Card","SalesPriceSanitized":126900.0,"SaleDateSanitized":"2027-01","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Cayenne","ModelYearSanitized":2023,"StateSanitized":"CA","PayMethodSanitized":"Bank Transfer","SalesPriceSanitized":84500.0,"SaleDateSanitized":"2027-01","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Macan S","ModelYearSanitized":2022,"StateSanitized":"FL","PayMethodSanitized":"Financing","SalesPriceSanitized":69800.0,"SaleDateSanitized":"2027-02","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Panamera","ModelYearSanitized":2021,"StateSanitized":"TX","PayMethodSanitized":"Cash","SalesPriceSanitized":81000.0,"SaleDateSanitized":"2027-03","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"718 Cayman","ModelYearSanitized":2023,"StateSanitized":"WA","PayMethodSanitized":"Debit Card","SalesPriceSanitized":78900.0,"SaleDateSanitized":"2027-03","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"911 Turbo S","ModelYearSanitized":2026,"StateSanitized":"MA","PayMethodSanitized":"Wire Transfer","SalesPriceSanitized":249300.0,"SaleDateSanitized":"2027-04","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Cayenne Coupe","ModelYearSanitized":2024,"StateSanitized":"AZ","PayMethodSanitized":"Wire Transfer","SalesPriceSanitized":108750.0,"SaleDateSanitized":"2027-04","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Taycan Turbo","ModelYearSanitized":2025,"StateSanitized":"TX","PayMethodSanitized":"ACH Payment","SalesPriceSanitized":164000.0,"SaleDateSanitized":"2027-05","EngineType":"Elétrico"},{"PorscheModelSanitized":"Panamera 4S","ModelYearSanitized":2024,"StateSanitized":"CA","PayMethodSanitized":"Credit Card","SalesPriceSanitized":119000.0,"SaleDateSanitized":"2027-05","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Cayenne E-Hybrid","ModelYearSanitized":2023,"StateSanitized":"NC","PayMethodSanitized":"Lease","SalesPriceSanitized":96800.0,"SaleDateSanitized":"2027-06","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Macan T","ModelYearSanitized":2022,"StateSanitized":"AZ","PayMethodSanitized":"Cash","SalesPriceSanitized":74400.0,"SaleDateSanitized":"2027-07","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Taycan GTS","ModelYearSanitized":2025,"StateSanitized":"GA","PayMethodSanitized":"Crypto Payment","SalesPriceSanitized":148500.0,"SaleDateSanitized":"2027-07","EngineType":"Elétrico"},{"PorscheModelSanitized":"718 Boxster","ModelYearSanitized":2021,"StateSanitized":"CA","PayMethodSanitized":"Bank Transfer","SalesPriceSanitized":71900.0,"SaleDateSanitized":"2027-08","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Panamera Turbo","ModelYearSanitized":2020,"StateSanitized":"OK","PayMethodSanitized":"Wire Transfer","SalesPriceSanitized":137500.0,"SaleDateSanitized":"2027-09","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"Cayenne Turbo GT","ModelYearSanitized":2025,"StateSanitized":"KS","PayMethodSanitized":"Credit Card","SalesPriceSanitized":204800.0,"SaleDateSanitized":"2027-09","EngineType":"Combustão/Híbrido"},{"PorscheModelSanitized":"911 Dakar","ModelYearSanitized":2024,"StateSanitized":"LA","PayMethodSanitized":"Lease","SalesPriceSanitized":271700.0,"SaleDateSanitized":"2027-10","EngineType":"Combustão/Híbrido"}];
+
+        // Global Chart Instances
+        let evolutionChartInst = null;
+        let topModelsChartInst = null;
+        let stateChartInst = null;
+        let engineChartInst = null;
+
+        // Chart.js Default Config
+        Chart.defaults.color = '#888888';
+        Chart.defaults.font.family = 'Inter, sans-serif';
+        Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(15, 15, 15, 0.95)';
+        Chart.defaults.plugins.tooltip.titleColor = '#ffffff';
+        Chart.defaults.plugins.tooltip.borderColor = '#2A2A2A';
+        Chart.defaults.plugins.tooltip.borderWidth = 1;
+        Chart.defaults.plugins.tooltip.padding = 12;
+
+        // Utility: Format Currency
+        const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
+
+        const initFilters = () => {
+            const populate = (id, key) => {
+                const select = document.getElementById(id);
+                const uniqueVals = [...new Set(porscheData.map(d => d[key]))].sort();
+                uniqueVals.forEach(val => {
+                    const opt = document.createElement('option');
+                    opt.value = val;
+                    opt.textContent = val;
+                    select.appendChild(opt);
+                });
+            };
+            populate('filter-state', 'StateSanitized');
+            populate('filter-model', 'PorscheModelSanitized');
+            populate('filter-payment', 'PayMethodSanitized');
+            populate('filter-engine', 'EngineType');
+        };
+
+        const updateDashboard = () => {
+            const stateVal = document.getElementById('filter-state').value;
+            const modelVal = document.getElementById('filter-model').value;
+            const paymentVal = document.getElementById('filter-payment').value;
+            const engineVal = document.getElementById('filter-engine').value;
+
+            // Filter data
+            const fData = porscheData.filter(d => {
+                return (stateVal === 'all' || d.StateSanitized === stateVal) &&
+                       (modelVal === 'all' || d.PorscheModelSanitized === modelVal) &&
+                       (paymentVal === 'all' || d.PayMethodSanitized === paymentVal) &&
+                       (engineVal === 'all' || d.EngineType === engineVal);
+            });
+
+            // Update KPIs
+            const totalRev = fData.reduce((sum, d) => sum + d.SalesPriceSanitized, 0);
+            const units = fData.length;
+            const avgTicket = units > 0 ? totalRev / units : 0;
+            
+            const evCount = fData.filter(d => d.EngineType === 'Elétrico').length;
+            const evMix = units > 0 ? ((evCount / units) * 100).toFixed(1) : 0;
+
+            document.getElementById('kpi-revenue').textContent = formatCurrency(totalRev);
+            document.getElementById('kpi-ticket').textContent = formatCurrency(avgTicket);
+            document.getElementById('kpi-units').textContent = units;
+            document.getElementById('kpi-ev-mix').textContent = `${evMix}%`;
+
+            // Clear AI Text since data changed
+            document.getElementById('ai-insight-text').classList.add('hidden');
+            document.getElementById('ai-insight-text').innerHTML = '';
+
+            // Render Charts
+            renderEvolutionChart(fData);
+            renderTopModelsChart(fData);
+            renderStateChart(fData);
+            renderEngineChart(fData);
+        };
+
+        const renderEvolutionChart = (data) => {
+            const ctx = document.getElementById('evolutionChart').getContext('2d');
+            
+            // Group by SaleDateSanitized
+            const revByDate = {};
+            data.forEach(d => {
+                revByDate[d.SaleDateSanitized] = (revByDate[d.SaleDateSanitized] || 0) + d.SalesPriceSanitized;
+            });
+
+            const sortedDates = Object.keys(revByDate).sort();
+            const values = sortedDates.map(date => revByDate[date]);
+
+            if (evolutionChartInst) evolutionChartInst.destroy();
+            evolutionChartInst = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sortedDates,
+                    datasets: [{
+                        label: 'Faturamento',
+                        data: values,
+                        borderColor: '#D50000',
+                        backgroundColor: 'rgba(213, 0, 0, 0.1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#151515',
+                        pointBorderColor: '#D50000',
+                        pointHoverBackgroundColor: '#D50000',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: '#2A2A2A' }, ticks: { callback: v => '$' + v/1000 + 'k' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        };
+
+        const renderTopModelsChart = (data) => {
+            const ctx = document.getElementById('topModelsChart').getContext('2d');
+            
+            const revByModel = {};
+            data.forEach(d => {
+                revByModel[d.PorscheModelSanitized] = (revByModel[d.PorscheModelSanitized] || 0) + d.SalesPriceSanitized;
+            });
+
+            const sortedModels = Object.entries(revByModel).sort((a, b) => b[1] - a[1]).slice(0, 7);
+            const labels = sortedModels.map(s => s[0]);
+            const values = sortedModels.map(s => s[1]);
+
+            if (topModelsChartInst) topModelsChartInst.destroy();
+            topModelsChartInst = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Faturamento',
+                        data: values,
+                        backgroundColor: '#D50000',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { color: '#2A2A2A' }, ticks: { callback: v => '$' + v/1000 + 'k' } },
+                        y: { grid: { display: false } }
+                    }
+                }
+            });
+        };
+
+        const renderStateChart = (data) => {
+            const ctx = document.getElementById('stateChart').getContext('2d');
+            
+            const revByState = {};
+            data.forEach(d => {
+                revByState[d.StateSanitized] = (revByState[d.StateSanitized] || 0) + d.SalesPriceSanitized;
+            });
+
+            const sortedStates = Object.entries(revByState).sort((a, b) => b[1] - a[1]).slice(0, 10);
+            const labels = sortedStates.map(s => s[0]);
+            const values = sortedStates.map(s => s[1]);
+
+            if (stateChartInst) stateChartInst.destroy();
+            stateChartInst = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Faturamento',
+                        data: values,
+                        backgroundColor: '#4A4A4A',
+                        hoverBackgroundColor: '#D50000',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: '#2A2A2A' }, ticks: { callback: v => '$' + v/1000 + 'k' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        };
+
+        const renderEngineChart = (data) => {
+            const ctx = document.getElementById('engineChart').getContext('2d');
+            
+            const counts = { 'Elétrico': 0, 'Combustão/Híbrido': 0 };
+            data.forEach(d => {
+                if (counts[d.EngineType] !== undefined) counts[d.EngineType]++;
+            });
+
+            if (engineChartInst) engineChartInst.destroy();
+            engineChartInst = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Elétrico', 'Combustão/Híbrido'],
+                    datasets: [{
+                        data: [counts['Elétrico'], counts['Combustão/Híbrido']],
+                        backgroundColor: ['#D50000', '#2A2A2A'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#E5E5E5', padding: 20 } }
+                    }
+                }
+            });
+        };
+
+        const generateAIInsight = async () => {
+            const btn = document.getElementById('btn-generate-insight');
+            const loading = document.getElementById('ai-loading');
+            const insightBox = document.getElementById('ai-insight-text');
+            
+            btn.classList.add('hidden');
+            loading.classList.remove('hidden');
+            insightBox.classList.add('hidden');
+
+            const revText = document.getElementById('kpi-revenue').textContent;
+            const tkText = document.getElementById('kpi-ticket').textContent;
+            const unitsText = document.getElementById('kpi-units').textContent;
+            const evText = document.getElementById('kpi-ev-mix').textContent;
+            
+            const prompt = `Como Diretor Financeiro (CFO) da Porsche, faça um breve resumo executivo (no máximo 3 a 4 frases) analisando os seguintes KPIs globais de vendas: Faturamento de ${revText}, Ticket Médio de ${tkText}, ${unitsText} unidades vendidas, e um Mix de Veículos Elétricos de ${evText}. Foque em insights estratégicos (ex: impacto do ticket médio, adoção da eletrificação). Use um tom de voz direto, corporativo, elegante e em português do Brasil.`;
+
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: { parts: [{ text: "Você é um CFO executivo da Porsche." }] }
+            };
+            
+            const apiKey = ""; 
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                
+                if (result.candidates && result.candidates[0].content.parts[0].text) {
+                    insightBox.innerHTML = result.candidates[0].content.parts[0].text.replace(/\n/g, '<br>');
+                } else {
+                    insightBox.innerHTML = "Não foi possível gerar um insight no momento.";
+                }
+            } catch (error) {
+                insightBox.innerHTML = "Erro ao conectar com o serviço de IA.";
+            } finally {
+                loading.classList.add('hidden');
+                insightBox.classList.remove('hidden');
+                btn.classList.remove('hidden');
+            }
+        };
+
+        document.querySelectorAll('select').forEach(select => {
+            select.addEventListener('change', updateDashboard);
+        });
+
+        document.getElementById('reset-filters').addEventListener('click', () => {
+            document.querySelectorAll('select').forEach(select => select.value = 'all');
+            updateDashboard();
+        });
+
+        document.getElementById('btn-generate-insight').addEventListener('click', generateAIInsight);
+
+        // Init
+        window.onload = () => {
+            initFilters();
+            updateDashboard();
+        };
+
+    </script>
+</body>
+</html>
