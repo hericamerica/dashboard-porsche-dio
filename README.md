@@ -20,7 +20,7 @@ Para este projeto, em vez de focar em métricas operacionais, adotei uma visão 
    * *Por quê:* No mercado de luxo, o preço médio por cliente é o indicador mais vital para medir o poder de compra do público e a verdadeira saúde financeira da marca.
 2. **Qual a proporção de vendas de Veículos 100% Elétricos vs. Combustão/Híbridos?**
    * *Por quê:* A adoção da transição energética é a métrica estratégica mais importante da Porsche globalmente na atual década (ex: adoção do Taycan e Macan Electric).
-3. **Qual é o volume de faturamento distribuído por Estado (Geografia)?**
+3. **Qual é o volume de faturamento distribuído por Estado?**
    * *Por quê:* Uma visão macro por estado (em vez de cidades fragmentadas) permite direcionar orçamentos de marketing e a logística de distribuição para as regiões mais rentáveis.
 4. **Qual é a Evolução da Receita ao Longo do Tempo?**
    * *Por quê:* Indispensável para identificar tendências de crescimento, sazonalidade e eventuais picos ou quebras no faturamento mensal.
